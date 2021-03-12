@@ -9,9 +9,9 @@ spring:
           predicates:
             - path=/order/**
         - id: payment-service
-            uri: lb//PAYMENT-SERVICE
-            predicates:
-              - path=/payment/**
+          uri: lb//PAYMENT-SERVICE
+          predicates:
+            - path=/payment/**
 eureka:
   client:
     fetch-registry: true
