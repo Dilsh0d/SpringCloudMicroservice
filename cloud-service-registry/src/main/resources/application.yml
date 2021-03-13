@@ -4,6 +4,8 @@ spring:
   application:
     name: CLOUD-SERVICE
 eureka:
+  server:
+    enable-self-preservation: true
   client:
     register-with-eureka: false
     fetch-registry: false

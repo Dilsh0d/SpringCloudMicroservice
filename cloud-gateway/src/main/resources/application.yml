@@ -5,13 +5,13 @@ spring:
     gateway:
       routes:
         - id: order-service
-          uri: lb//ORDER-SERVICE
+          uri: lb://ORDER-SERVICE
           predicates:
-            - path=/order/**
+            - Path=/order/**
         - id: payment-service
-          uri: lb//PAYMENT-SERVICE
+          uri: lb://PAYMENT-SERVICE
           predicates:
-            - path=/payment/**
+            - Path=/payment/**
 eureka:
   client:
     fetch-registry: true
