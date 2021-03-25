@@ -4,8 +4,34 @@ spring:
   h2:
     console:
       enabled: true
+      path: /h2-payment
+  datasource:
+    url: jdbc:h2:file:~/payment
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
   application:
     name: PAYMENT-SERVICE
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  kafka:
+    producer:
+      transaction-id-prefix: saga_pattern_event
+      client-id: events_producer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      bootstrap-servers: localhost:9092
+    consumer:
+      groupid: saga_pattern_order_event
+      client-id: events_payment_consumer
+      auto-offset-reset: earliest
+      bootstrap-servers: localhost:9092
+      max-poll-records: 1
+  redis:
+    host: localhost
+    port: 6379
 eureka:
   client:
     fetch-registry: true
