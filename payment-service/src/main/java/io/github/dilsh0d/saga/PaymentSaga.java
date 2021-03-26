@@ -3,19 +3,14 @@ package io.github.dilsh0d.saga;
 import io.github.dilsh0d.component.PaymentPushNotification;
 import io.github.dilsh0d.enums.PaymentType;
 import io.github.dilsh0d.order.events.OrderPaymentEntityCreatedEvent;
+import io.github.dilsh0d.order.events.RollbackOrderEvent;
 import io.github.dilsh0d.order.events.SuccessOrderEvent;
-import io.github.dilsh0d.payment.events.CardPayPaymentEvent;
-import io.github.dilsh0d.payment.events.CreateReceiptPaymentEvent;
-import io.github.dilsh0d.payment.events.PaymentDoneEvent;
-import io.github.dilsh0d.payment.events.TryAgainReceiptPaymentEvent;
+import io.github.dilsh0d.payment.events.*;
 import io.github.dilsh0d.service.PaymentService;
 import io.github.dilsh0d.service.payment.PayPalStrategy;
 import io.github.dilsh0d.service.payment.StripeStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
-import uz.kassa.microservice.saga.annotation.SagaOrchestEnd;
-import uz.kassa.microservice.saga.annotation.SagaOrchestEventHandler;
-import uz.kassa.microservice.saga.annotation.SagaOrchestStart;
-import uz.kassa.microservice.saga.annotation.SagaOrchestration;
+import uz.kassa.microservice.saga.annotation.*;
 import uz.kassa.microservice.saga.gateway.SagaGateway;
 
 import java.math.BigDecimal;
@@ -160,5 +155,25 @@ public class PaymentSaga {
         sagaGateway.send(successOrderEvent);
 
         System.out.println("-------------------------------PAYMENT SAGA DONE-----------------------------");
+    }
+
+    @SagaOrchestEnd
+    @SagaOrchestEventHandler
+    public void handler(RollbackPaymentEvent event) {
+        paymentService.paymentProcessFail(event);
+        if(!event.isCallOrderSaga()) {
+            RollbackOrderEvent rollbackOrderEvent = new RollbackOrderEvent();
+            rollbackOrderEvent.setId(orderId);
+            rollbackOrderEvent.setCallPaymentSaga(true);
+            sagaGateway.send(rollbackOrderEvent);
+        }
+        System.out.println("-------------------------------PAYMENT SAGA ROLLBACK-----------------------------");
+    }
+
+    @SagaOrchestException
+    public void exceptionHandler(){
+        RollbackPaymentEvent rollbackOrderEvent = new RollbackPaymentEvent();
+        rollbackOrderEvent.setId(paymentId);
+        sagaGateway.send(rollbackOrderEvent);
     }
 }

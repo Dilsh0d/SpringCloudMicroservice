@@ -9,8 +9,10 @@ import uz.kassa.microservice.saga.annotation.SagaAssociateId;
  */
 @Getter
 @Setter
-public class CancelOrderEvent {
+public class RollbackOrderEvent {
 
     @SagaAssociateId
     private String id;
+
+    private boolean callPaymentSaga = false;
 }

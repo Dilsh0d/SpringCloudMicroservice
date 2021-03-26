@@ -6,6 +6,7 @@ import io.github.dilsh0d.model.enums.OrderStatus;
 import io.github.dilsh0d.enums.PaymentType;
 import io.github.dilsh0d.model.repository.OrderRepository;
 import io.github.dilsh0d.order.events.OrderPaymentEntityCreatedEvent;
+import io.github.dilsh0d.order.events.RollbackOrderEvent;
 import io.github.dilsh0d.order.events.SuccessOrderEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,15 @@ public class OrderService {
         if(orderEntityOptional.isPresent()){
             OrderEntity orderEntity = orderEntityOptional.get();
             orderEntity.setStatus(OrderStatus.Done);
+            orderRepository.save(orderEntity);
+        }
+    }
+
+    public void orderProcessFail(RollbackOrderEvent event) {
+        Optional<OrderEntity> orderEntityOptional= orderRepository.findById(event.getId());
+        if(orderEntityOptional.isPresent()){
+            OrderEntity orderEntity = orderEntityOptional.get();
+            orderEntity.setStatus(OrderStatus.Fail);
             orderRepository.save(orderEntity);
         }
     }

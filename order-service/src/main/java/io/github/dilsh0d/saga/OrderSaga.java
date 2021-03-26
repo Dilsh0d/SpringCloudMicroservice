@@ -2,15 +2,14 @@ package io.github.dilsh0d.saga;
 
 import io.github.dilsh0d.component.OrderPushNotification;
 import io.github.dilsh0d.enums.PaymentType;
-import io.github.dilsh0d.order.events.ChooseOrderPaymentTypeEvent;
-import io.github.dilsh0d.order.events.CreateOrderEvent;
-import io.github.dilsh0d.order.events.OrderPaymentEntityCreatedEvent;
-import io.github.dilsh0d.order.events.SuccessOrderEvent;
+import io.github.dilsh0d.order.events.*;
 import io.github.dilsh0d.payment.events.CreateReceiptPaymentEvent;
+import io.github.dilsh0d.payment.events.RollbackPaymentEvent;
 import io.github.dilsh0d.payment.events.TryAgainReceiptPaymentEvent;
 import io.github.dilsh0d.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import uz.kassa.microservice.saga.annotation.*;
+import uz.kassa.microservice.saga.event.SagaExceptionHandler;
 import uz.kassa.microservice.saga.gateway.SagaGateway;
 
 import java.math.BigDecimal;
@@ -122,9 +121,30 @@ public class OrderSaga {
         orderPushNotification.sentClientNotification(event.getId(), "ORDER SUCCESSFUL PAYMENT DONE.");
     }
 
+    @SagaOrchestEnd
+    @SagaOrchestEventHandler
+    public void handler(RollbackOrderEvent event) {
+        orderService.orderProcessFail(event);
+
+        if(!event.isCallPaymentSaga()) {
+            RollbackPaymentEvent rollbackPaymentEvent = new RollbackPaymentEvent();
+            rollbackPaymentEvent.setId(paymentId);
+            rollbackPaymentEvent.setCallOrderSaga(true);
+            sagaGateway.send(rollbackPaymentEvent);
+
+        }
+        orderPushNotification.sentClientNotification(event.getId(), "ORDER PROCESS FAIL AND ROLLBACK");
+    }
+
 
     @SagaOrchestException
-    public void exception(){
+    public void exceptionHandler(SagaExceptionHandler sagaExceptionHandler){
+        orderPushNotification.sentClientNotification(sagaExceptionHandler.getSagaId(),
+                "ORDER EXCEPTION IN EVENT CLASS"+sagaExceptionHandler.getExceptionEventClass()
+                        +" SAGA METHOD NAME "+ sagaExceptionHandler.getExceptionSagaMethodName() +"EXCEPTION MESSAGE :["+sagaExceptionHandler.getException().getMessage()+"]");
 
+        RollbackOrderEvent rollbackOrderEvent = new RollbackOrderEvent();
+        rollbackOrderEvent.setId(orderId);
+        sagaGateway.send(rollbackOrderEvent);
     }
 }

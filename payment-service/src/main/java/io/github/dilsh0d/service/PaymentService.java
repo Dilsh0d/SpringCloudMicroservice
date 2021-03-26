@@ -5,6 +5,7 @@ import io.github.dilsh0d.model.enums.PaymentStatus;
 import io.github.dilsh0d.model.repository.PaymentRepository;
 import io.github.dilsh0d.payment.events.CardPayPaymentEvent;
 import io.github.dilsh0d.payment.events.CreateReceiptPaymentEvent;
+import io.github.dilsh0d.payment.events.RollbackPaymentEvent;
 import io.github.dilsh0d.service.payment.PaymentStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,15 @@ public class PaymentService {
             paymentRepository.save(paymentEntity);
         } else {
             throw new EntityNotFoundException();
+        }
+    }
+
+    public void paymentProcessFail(RollbackPaymentEvent event) {
+        Optional<PaymentEntity> paymentEntityOptional = paymentRepository.findById(event.getId());
+        if(paymentEntityOptional.isPresent()){
+            PaymentEntity paymentEntity = paymentEntityOptional.get();
+            paymentEntity.setStatus(PaymentStatus.Fail);
+            paymentRepository.save(paymentEntity);
         }
     }
 }
