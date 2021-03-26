@@ -10,7 +10,6 @@ import uz.kassa.microservice.saga.annotation.SagaAssociateId;
  */
 @Getter
 @Setter
-@AllArgsConstructor
 public class SuccessOrderEvent {
 
     @SagaAssociateId

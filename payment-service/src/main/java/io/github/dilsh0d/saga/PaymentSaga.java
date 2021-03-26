@@ -91,30 +91,6 @@ public class PaymentSaga {
         this.cardCvv = cardCvv;
     }
 
-    public SagaGateway getSagaGateway() {
-        return sagaGateway;
-    }
-
-    public void setSagaGateway(SagaGateway sagaGateway) {
-        this.sagaGateway = sagaGateway;
-    }
-
-    public PaymentService getPaymentService() {
-        return paymentService;
-    }
-
-    public void setPaymentService(PaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
-
-    public PaymentPushNotification getPaymentPushNotification() {
-        return paymentPushNotification;
-    }
-
-    public void setPaymentPushNotification(PaymentPushNotification paymentPushNotification) {
-        this.paymentPushNotification = paymentPushNotification;
-    }
-
     @Autowired
     private transient SagaGateway sagaGateway;
 
@@ -169,14 +145,20 @@ public class PaymentSaga {
             paymentService.pay(event, new StripeStrategy(cardNumber, cardExpired, cardCvv));
         }
 
-        sagaGateway.send(new PaymentDoneEvent(paymentId));
+        PaymentDoneEvent paymentDoneEvent = new PaymentDoneEvent();
+        paymentDoneEvent.setId(paymentId);
+
+        sagaGateway.send(paymentDoneEvent);
 
     }
 
     @SagaOrchestEnd
     @SagaOrchestEventHandler
     public void handler(PaymentDoneEvent event) {
-        sagaGateway.send(new SuccessOrderEvent(orderId));
+        SuccessOrderEvent successOrderEvent = new SuccessOrderEvent();
+        successOrderEvent.setId(orderId);
+        sagaGateway.send(successOrderEvent);
+
         System.out.println("-------------------------------PAYMENT SAGA DONE-----------------------------");
     }
 }
