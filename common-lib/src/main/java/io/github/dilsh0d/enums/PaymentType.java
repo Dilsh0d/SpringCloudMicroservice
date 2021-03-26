@@ -9,6 +9,8 @@ public enum PaymentType {
     public static String getStrings(){
         String str = "";
         for(PaymentType type:values()) {
+            if(PaymentType.None.equals(type))
+                continue;
             if (!str.equals("")) {
                 str += ", ";
             }
